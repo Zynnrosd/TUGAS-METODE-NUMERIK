@@ -46,13 +46,13 @@ def fixed_point_jacobi(x0, y0, tol, max_iter=200):
     return None
 
 # ==========================================================
-# Metode Iterasi Seidel (VERSI PERBAIKAN)
+# Metode Iterasi Seidel
 # ==========================================================
 def fixed_point_seidel(x0, y0, tol, max_iter=200):
     print("\n=== Iterasi Titik Tetap - Metode Seidel ===")
     x, y = x0, y0
     for k in range(max_iter):
-        x_old, y_old = x, y  # 1. Simpan nilai lama
+        x_old, y_old = x, y
 
         x = g1B(x_old, y_old)
         # Periksa x sebelum digunakan untuk menghitung y
@@ -61,15 +61,14 @@ def fixed_point_seidel(x0, y0, tol, max_iter=200):
             print("Divergen (akar negatif) pada iterasi ke-", k + 1)
             return None
 
-        y = g2A(x, y_old) # Gunakan x baru dan y lama
+        y = g2A(x, y_old)
 
-        # 2. Tambahkan pengaman overflow
-        if abs(y) > 1e15: # Hentikan jika nilai y meledak
+        
+        if abs(y) > 1e15:
             print(f"Iter {k+1:3d}: x={x:.6f}, y={y:.6f}")
             print("Divergen (overflow numerik) pada iterasi ke-", k + 1)
             return None
 
-        # 3. Hitung error dari nilai lama vs nilai baru
         err = math.sqrt((x - x_old)**2 + (y - y_old)**2)
         print(f"Iter {k+1:3d}: x={x:.6f}, y={y:.6f}, error={err:.6e}")
 
