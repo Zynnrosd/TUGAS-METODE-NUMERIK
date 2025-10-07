@@ -25,65 +25,76 @@ def g2A(x, y):
     return 57 - 3*x*y**2
 
 # ==========================================================
-# Metode Iterasi Jacobi
+# Iterasi Titik Tetap - Jacobi
 # ==========================================================
 def fixed_point_jacobi(x0, y0, tol, max_iter=200):
-    print("\n=== Iterasi Titik Tetap - Metode Jacobi ===")
+    print("\n===================================================")
+    print("METODE JACOBI (dengan g1B dan g2A)")
+    print("Iter\t     x\t\t     y\t\t    |Δx|\t\t    |Δy|")
+    print("---------------------------------------------------")
+
     x, y = x0, y0
     for k in range(max_iter):
         x_new = g1B(x, y)
         y_new = g2A(x, y)
         if any(map(math.isnan, [x_new, y_new])):
-            print("Divergen pada iterasi ke-", k + 1)
+            print(f"❌ Terjadi error pada iterasi ke-{k+1}: math domain error")
+            print("→ Solusi divergen atau keluar dari domain fungsi.")
             return None
-        err = math.sqrt((x_new - x)**2 + (y_new - y)**2)
-        print(f"Iter {k+1:3d}: x={x_new:.6f}, y={y_new:.6f}, error={err:.6e}")
-        if err < tol:
+        dx = abs(x_new - x)
+        dy = abs(y_new - y)
+        print(f"{k:2d}\t{x_new:10.6f}\t{y_new:10.6f}\t{dx:10.6f}\t{dy:10.6f}")
+        if math.sqrt(dx**2 + dy**2) < tol:
             print(f"Konvergen pada iterasi ke-{k+1}")
             return x_new, y_new
         x, y = x_new, y_new
+
     print("Tidak konvergen dalam batas iterasi.")
     return None
 
 # ==========================================================
-# Metode Iterasi Seidel
+# Iterasi Titik Tetap - Seidel
 # ==========================================================
 def fixed_point_seidel(x0, y0, tol, max_iter=200):
-    print("\n=== Iterasi Titik Tetap - Metode Seidel ===")
+    print("\n===================================================")
+    print("METODE GAUSS-SEIDEL (dengan g1B dan g2A)")
+    print("Iter\t     x\t\t     y\t\t    |Δx|\t\t    |Δy|")
+    print("---------------------------------------------------")
+
     x, y = x0, y0
     for k in range(max_iter):
         x_old, y_old = x, y
-
         x = g1B(x_old, y_old)
-        # Periksa x sebelum digunakan untuk menghitung y
         if math.isnan(x):
-            print(f"Iter {k+1:3d}: x=nan")
-            print("Divergen (akar negatif) pada iterasi ke-", k + 1)
+            print(f"❌ Terjadi error pada iterasi ke-{k+1}: math domain error")
+            print("→ Solusi divergen atau keluar dari domain fungsi.")
             return None
 
         y = g2A(x, y_old)
+        dx = abs(x - x_old)
+        dy = abs(y - y_old)
 
-        
         if abs(y) > 1e15:
-            print(f"Iter {k+1:3d}: x={x:.6f}, y={y:.6f}")
-            print("Divergen (overflow numerik) pada iterasi ke-", k + 1)
+            print(f"❌ Divergen (overflow numerik) pada iterasi ke-{k+1}")
             return None
 
-        err = math.sqrt((x - x_old)**2 + (y - y_old)**2)
-        print(f"Iter {k+1:3d}: x={x:.6f}, y={y:.6f}, error={err:.6e}")
+        print(f"{k:2d}\t{x:10.6f}\t{y:10.6f}\t{dx:10.6f}\t{dy:10.6f}")
 
-        if err < tol:
+        if math.sqrt(dx**2 + dy**2) < tol:
             print(f"Konvergen pada iterasi ke-{k+1}")
             return x, y
-            
+
     print("Tidak konvergen dalam batas iterasi.")
     return None
 
 # ==========================================================
-# Metode Newton-Raphson
+# Metode Newton-Raphson (dengan deltaX dan deltaY)
 # ==========================================================
 def newton_raphson(x0, y0, tol, max_iter=100):
-    print("\n=== Metode Newton-Raphson ===")
+    print("\n===================================================")
+    print("METODE NEWTON-RAPHSON")
+    print("r\t     x\t\t     y\t\t deltaX\t\t deltaY")
+    print("---------------------------------------------------")
     x, y = x0, y0
     for k in range(max_iter):
         J = np.array([
@@ -92,10 +103,10 @@ def newton_raphson(x0, y0, tol, max_iter=100):
         ])
         F = np.array([-f1(x, y), -f2(x, y)])
         delta = np.linalg.solve(J, F)
-        x_new, y_new = x + delta[0], y + delta[1]
-        err = math.sqrt(delta[0]**2 + delta[1]**2)
-        print(f"Iter {k+1:2d}: x={x_new:.6f}, y={y_new:.6f}, error={err:.6e}")
-        if err < tol:
+        dx, dy = delta[0], delta[1]
+        x_new, y_new = x + dx, y + dy
+        print(f"{k:2d}\t{x_new:10.6f}\t{y_new:10.6f}\t{dx:10.6f}\t{dy:10.6f}")
+        if math.sqrt(dx**2 + dy**2) < tol:
             print(f"Konvergen pada iterasi ke-{k+1}")
             return x_new, y_new
         x, y = x_new, y_new
@@ -103,22 +114,25 @@ def newton_raphson(x0, y0, tol, max_iter=100):
     return None
 
 # ==========================================================
-# Metode Secant (Broyden)
+# Metode Secant (Broyden) - dengan deltaX dan deltaY
 # ==========================================================
 def broyden_method(x0, y0, tol, max_iter=100):
-    print("\n=== Metode Secant (Broyden) ===")
+    print("\n===================================================")
+    print("METODE SECANT (BROyDEN)")
+    print("r\t     x\t\t     y\t\t deltaX\t\t deltaY")
+    print("---------------------------------------------------")
     x, y = x0, y0
     B = np.eye(2)
     F = np.array([f1(x, y), f2(x, y)])
     for k in range(max_iter):
         delta = -np.linalg.solve(B, F)
-        x_new, y_new = x + delta[0], y + delta[1]
+        dx, dy = delta[0], delta[1]
+        x_new, y_new = x + dx, y + dy
         F_new = np.array([f1(x_new, y_new), f2(x_new, y_new)])
         yk = F_new - F
         B = B + np.outer((yk - B @ delta), delta) / (delta @ delta)
-        err = np.linalg.norm(delta)
-        print(f"Iter {k+1:2d}: x={x_new:.6f}, y={y_new:.6f}, error={err:.6e}")
-        if err < tol:
+        print(f"{k:2d}\t{x_new:10.6f}\t{y_new:10.6f}\t{dx:10.6f}\t{dy:10.6f}")
+        if math.sqrt(dx**2 + dy**2) < tol:
             print(f"Konvergen pada iterasi ke-{k+1}")
             return x_new, y_new
         x, y, F = x_new, y_new, F_new
@@ -131,6 +145,9 @@ def broyden_method(x0, y0, tol, max_iter=100):
 if __name__ == "__main__":
     x0, y0 = 1.5, 3.5
     tol = 1e-6
+    print("Tebakan awal: x0 = 1.5, y0 = 3.5")
+    print("Toleransi: ε = 1e-06")
+    print("NIMx = 2 → Kombinasi: g1B dan g2A")
 
     fixed_point_jacobi(x0, y0, tol)
     fixed_point_seidel(x0, y0, tol)
